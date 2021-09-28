@@ -22,3 +22,4 @@ yarn
 ```
 yarn start
 ```
+3. App will running on localhost:3000
