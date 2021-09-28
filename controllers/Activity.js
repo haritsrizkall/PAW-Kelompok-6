@@ -1,17 +1,16 @@
 const activityRepository = require('../database/repository/Activity');
+const { createResponse } = require('../utils/helpers');
 const httpStatus = require('../utils/httpStatus');
 
 const addActivity = (req, res) => {
     const body = req.body;
     
-    userRepository.saveActivity(body).then(activity => {
-        res.status(httpStatus.OK).json({
-            message: activity
-        });
+    activityRepository.saveActivity(body).then(activity => {
+        const response = createResponse('Success to add activity', httpStatus.OK, activity);
+        res.status(httpStatus.OK).json(response);
     }).catch(err => {
-        res.status(httpStatus.BadRequest).json({
-            message: err.message
-        });
+        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+        res.status(httpStatus.UnproccessableEntity).json(response);
     })
     
 }
@@ -19,24 +18,24 @@ const addActivity = (req, res) => {
 const getActivity = (req, res) => {
     const params = req.params;
     if (params.id) {
-        userRepository.getActivity(params.id).then(activity => {
-            res.status(httpStatus.OK).json({
-                message: activity
-            });
+        activityRepository.getActivity(params.id).then(activity => {
+            if (!activity) {
+                const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
+                res.status(httpStatus.BadRequest).json(response);
+            }
+            const response = createResponse('List activity by id', httpStatus.OK, activity);
+            res.status(httpStatus.OK).json(response);
         }).catch(err => {
-            res.status(httpStatus.BadRequest).json({
-                message: err.message
-            });
+            const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+            res.status(httpStatus.UnproccessableEntity).json(response);
         })
     }else {
-        userRepository.getActivity().then(activities => {
-            res.status(httpStatus.OK).json({
-                message: activities
-            });
+        activityRepository.getActivity().then(activities => {
+            const response = createResponse('List all activities', httpStatus.OK, activities);
+            res.status(httpStatus.OK).json(response);
         }).catch(err => {
-            res.status(httpStatus.BadRequest).json({
-                message: err.message
-            });
+            const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+            res.status(httpStatus.UnproccessableEntity).json(response);
         })
     }
 }
@@ -44,28 +43,31 @@ const getActivity = (req, res) => {
 const updateActivity = (req, res) => {
     const body = req.body;
     const params = req.params;
-    userRepository.updateActivities(params.id, body).then(activity => {
-        res.status(httpStatus.OK).json({
-            message: activity
-        });
+    activityRepository.updateActivity(params.id, body).then(activity => {
+        if (!activity) {
+            const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
+            res.status(httpStatus.BadRequest).json(response);
+        }
+        const response = createResponse('Success to update activity', httpStatus.OK, activity);
+        res.status(httpStatus.OK).json(response);
     }).catch(err => {
-        res.status(httpStatus.BadRequest).json({
-            message: err.message
-        });
+        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+        res.status(httpStatus.UnproccessableEntity).json(response);
     });
 }
 
 const deleteActivity = (req, res) => {
-    const body = req.body;
     const params = req.params;
-    userRepository.deleteActivity(params.id).then(activity => {
-        res.status(httpStatus.OK).json({
-            message: activity
-        });
+    activityRepository.deleteActivity(params.id).then(activity => {
+        if (!activity) {
+            const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
+            res.status(httpStatus.BadRequest).json(response);
+        }
+        const response = createResponse('Success to delete activity', httpStatus.OK, activity);
+        res.status(httpStatus.OK).json(response);
     }).catch(err => {
-        res.status(httpStatus.BadRequest).json({
-            message: err.message
-        });
+        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+        res.status(httpStatus.UnproccessableEntity).json(response);
     }
     );
 }
