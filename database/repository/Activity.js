@@ -1,6 +1,7 @@
 const { activityModel } = require('../model/Activity');
 
 const saveActivity = async (data) => {
+    const activity = new activityModel(data);
     return await activityModel.create(data);
 }
 
