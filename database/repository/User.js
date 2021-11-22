@@ -1,4 +1,5 @@
 const { userModel } = require('../model/User');
+const { activityModel } = require('../model/Activity');
 
 const saveUser = async (data) => {
     const user = new userModel(data);
@@ -10,6 +11,10 @@ const getUser = async (id) => {
         return await userModel.findById(id);
     }
     return await userModel.find();
+}
+
+const getUserActivities = async (userId) => {
+    return await activityModel.find({ userId });
 }
 
 const getUserByEmail = async (email) => {
@@ -29,5 +34,6 @@ module.exports = userRepository = {
     getUser,
     updateUser,
     deleteUser,
-    getUserByEmail
+    getUserByEmail,
+    getUserActivities
 };

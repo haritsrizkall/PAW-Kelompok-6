@@ -3,7 +3,7 @@ const config = require('../config');
 
 const connect = async () => {
     try {
-        await mongoose.connect('mongodb+srv://admin:ugmjayajayajaya@cluster0.ruzcm.mongodb.net/testdb?retryWrites=true&w=majority', {
+        await mongoose.connect(config.database.uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
@@ -11,7 +11,6 @@ const connect = async () => {
         console.log('Connect to database failed. Error : ', err);
     }   
     
-    console.log('db connected');
 } 
 
 module.exports = {

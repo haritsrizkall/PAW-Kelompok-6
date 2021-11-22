@@ -1,75 +1,118 @@
 const activityRepository = require('../database/repository/Activity');
-const { createResponse } = require('../utils/helpers');
+const { createResponse, unauthorizedResponse } = require('../utils/helpers');
 const httpStatus = require('../utils/httpStatus');
 
-const addActivity = (req, res) => {
+const addActivity = async (req, res) => {
     const body = req.body;
-    
-    activityRepository.saveActivity(body).then(activity => {
+
+    try {
+        const activity = await activityRepository.saveActivity({
+            userId: req.userId,
+            ...body
+        });
         const response = createResponse('Success to add activity', httpStatus.OK, activity);
         res.status(httpStatus.OK).json(response);
-    }).catch(err => {
-        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
+    } catch (error) {
+        const response = createResponse('Error', httpStatus.UnproccessableEntity, error.message);
         res.status(httpStatus.UnproccessableEntity).json(response);
-    })
-    
-}
-
-const getActivity = (req, res) => {
-    const params = req.params;
-    if (params.id) {
-        activityRepository.getActivity(params.id).then(activity => {
-            if (!activity) {
-                const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
-                res.status(httpStatus.BadRequest).json(response);
-            }
-            const response = createResponse('List activity by id', httpStatus.OK, activity);
-            res.status(httpStatus.OK).json(response);
-        }).catch(err => {
-            const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
-            res.status(httpStatus.UnproccessableEntity).json(response);
-        })
-    }else {
-        activityRepository.getActivity().then(activities => {
-            const response = createResponse('List all activities', httpStatus.OK, activities);
-            res.status(httpStatus.OK).json(response);
-        }).catch(err => {
-            const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
-            res.status(httpStatus.UnproccessableEntity).json(response);
-        })
     }
 }
 
-const updateActivity = (req, res) => {
+const getActivity = async (req, res) => {
+    const params = req.params;
+    try {
+        if (params.id) {
+            const activity = await activityRepository.getActivity(params.id);
+            if (!activity) {
+                throw new Error('Activity not found');
+            }
+            
+            const response = createResponse('Success to get activity', httpStatus.OK, activity);
+            res.status(httpStatus.OK).json(response);
+        }else {
+            const activities = await activityRepository.getActivity();
+            const response = createResponse('Success to get all activities', httpStatus.OK, activities);
+            res.status(httpStatus.OK).json(response);
+        }
+    } catch (error) {
+        if (error.message === 'Activity not found') {
+            const response = createResponse('Error', httpStatus.NotFound, {error: error.message});
+            res.status(httpStatus.NotFound).json(response);
+        } 
+
+        const response = createResponse('Error', httpStatus.UnproccessableEntity, {error: error.message});
+        res.status(httpStatus.UnproccessableEntity).json(response);
+    }
+}
+
+const updateActivity = async (req, res) => {
     const body = req.body;
     const params = req.params;
-    activityRepository.updateActivity(params.id, body).then(activity => {
+    try {
+
+        const activity = await activityRepository.getActivity(params.id);   
         if (!activity) {
-            const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
-            res.status(httpStatus.BadRequest).json(response);
+            throw new Error('Activity not found');
         }
+
+        await activityRepository.updateActivity(params.id, body);
+
+        if(activity.id != req.userId) {
+            throw new Error('Unauthorized');
+        }
+
         const response = createResponse('Success to update activity', httpStatus.OK, activity);
         res.status(httpStatus.OK).json(response);
-    }).catch(err => {
-        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
-        res.status(httpStatus.UnproccessableEntity).json(response);
-    });
+    } catch (error) {
+        let response;
+        switch (error.message) {
+            case "Unauthorized":
+                response = unauthorizedResponse();
+                res.status(httpStatus.Unauthorized).json(response);
+                break;
+            case "Activity not found":
+                response = createResponse('Error', httpStatus.NotFound, {error: error.message});
+                res.status(httpStatus.NotFound).json(response);
+            default:
+                response = createResponse('Error', httpStatus.UnproccessableEntity, {error: error.message});
+                res.status(httpStatus.NotFound).json(response);
+                break;
+        }
+    }
 }
 
-const deleteActivity = (req, res) => {
+const deleteActivity = async (req, res) => {
     const params = req.params;
-    activityRepository.deleteActivity(params.id).then(activity => {
+    try {
+        const activity = await activityRepository.getActivity(params.id);   
         if (!activity) {
-            const response = createResponse('Error', httpStatus.BadRequest, 'Activity not found');
-            res.status(httpStatus.BadRequest).json(response);
+            throw new Error('Activity not found');
         }
+
+        if (activity.userId != req.userId) {
+            throw new Error('Unauthorized');
+        }
+
+        await activityRepository.deleteActivity(params.id);
+      
         const response = createResponse('Success to delete activity', httpStatus.OK, activity);
         res.status(httpStatus.OK).json(response);
-    }).catch(err => {
-        const response = createResponse('Error', httpStatus.UnproccessableEntity, err.message);
-        res.status(httpStatus.UnproccessableEntity).json(response);
+    } catch (error) {
+        let response;
+        switch (error.message) {
+            case "Unauthorized":
+                response = unauthorizedResponse();
+                res.status(httpStatus.Unauthorized).json(response);
+                break;
+            case "Activity not found":
+                response = createResponse('Error', httpStatus.NotFound, {error: error.message});
+                res.status(httpStatus.NotFound).json(response);
+            default:
+                response = createResponse('Error', httpStatus.UnproccessableEntity, {error: error.message});
+                res.status(httpStatus.NotFound).json(response);
+                break;
+        }
     }
-    );
 }
 module.exports = {
     addActivity,
