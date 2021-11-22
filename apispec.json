@@ -2,7 +2,11 @@
     "openapi":"3.0.2",
     "info": {
         "title":"PAW Kelompok 6",
-        "version":"1.0"
+        "version":"1.0",
+        "contact": {
+            "name": "Harits Rizkal A",
+            "email": "haritsrizkal@mail.ugm.ac.id"
+        }
     },
     "servers": [
         {"url":"https://localhost/v1/"}
@@ -92,7 +96,7 @@
             }
         },
         "/users/{userID}": {
-            "put": {
+            "patch": {
                 "tags": ["Users Api"],
                 "description": "Update User",
                 "security": [
@@ -175,7 +179,7 @@
         },
         "/users/{userID}/activities": {
             "get": {
-                "tags": ["Activities Api"],
+                "tags": ["Users Api"],
                 "description": "Get user activities",
                 "security": [
                     {
@@ -317,7 +321,7 @@
             }
         },
         "/activities/{activityID}": {
-            "put": {
+            "patch": {
                 "tags": ["Activities Api"],
                 "description": "Update activity",
                 "security": [
