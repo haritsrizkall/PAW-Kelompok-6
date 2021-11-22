@@ -1,4 +1,5 @@
 const httpStatus = require("./httpStatus");
+const bcrypt = require('bcrypt');
 
 const createResponse = (message, status, data) => {
     return {
@@ -15,7 +16,13 @@ const unauthorizedResponse = () => {
         data: null,
     }
 }
+
+const comparePassword = (password, hash) => {
+    return bcrypt.compare(password, hash);
+}
+
 module.exports = {
     createResponse,
-    unauthorizedResponse
+    unauthorizedResponse,
+    comparePassword,
 }
