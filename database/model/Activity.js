@@ -1,16 +1,12 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
-    user_id: {
+    userId: {
         type: String,
         required: true
     },
     title: {
         type: String,
-        required: true
-    },
-    date: {
-        type: Date,
         required: true
     },
     description: {
@@ -26,7 +22,7 @@ const activitySchema = new mongoose.Schema({
         type: Date,
         required: true
     }
-}, {collection: 'activities'});
+}, {collection: 'activities', timestamps: true});
 
 module.exports = {
     activityModel : mongoose.model('Activity', activitySchema),
