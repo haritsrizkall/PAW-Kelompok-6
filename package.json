@@ -1,10 +1,10 @@
 {
-  "name": "PAW",
+  "name": "paw-kelompok-6",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon ./app.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
