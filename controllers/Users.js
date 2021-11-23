@@ -4,17 +4,22 @@ const httpStatus = require('../utils/httpStatus');
 const jwt = require('jsonwebtoken');
 const config = require('../config')
 const bcrypt = require('bcrypt');
+const { registerValidation, loginValidation } = require('../validation/users');
 
 const registerUser = async (req, res) => {
-    const body = req.body;
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(body.password, salt);
 
-    userRepository.saveUser({
-        name: body.name,
-        email: body.email,
-        password: hashedPassword   
-    }).then(user => {
+    try {
+        const body = req.body;
+        const validatedBody = await registerValidation.validateAsync(body, {abortEarly: false});
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(body.password, salt);
+
+        const user = await userRepository.saveUser({
+            name: validatedBody.name,
+            email: validatedBody.email,
+            password: hashedPassword   
+        });
+
         const token = jwt.sign({id: user.id}, config.jwtSecret);
         const response = createResponse('Success to add user', httpStatus.OK, {
             id: user.id,
@@ -23,10 +28,10 @@ const registerUser = async (req, res) => {
             token: token
         });
         res.status(httpStatus.OK).json(response);
-    }).catch(err => {
-        const response = createResponse('Error', httpStatus.BadRequest, err.message);
+    } catch (error) {
+        const response = createResponse('Error', httpStatus.BadRequest, {error: error.details});
         res.status(httpStatus.BadRequest).json(response);
-    })
+    }
     
 }
 
@@ -34,12 +39,14 @@ const loginUser = async (req, res) => {
     const body = req.body;
 
     try {
-        const user = await userRepository.getUserByEmail(body.email);
+        const validatedBody = await loginValidation.validateAsync(body, {abortEarly: false});
+        
+        const user = await userRepository.getUserByEmail(validatedBody.email);
         if (!user) {
             throw new Error('User not found');
         }
 
-        const isValid = await comparePassword(body.password, user.password);
+        const isValid = await comparePassword(validatedBody.password, user.password);
         if (!isValid) {
             throw new Error('Invalid password');
         }
@@ -65,29 +72,31 @@ const loginUser = async (req, res) => {
 
 }
 
-const getUsers = (req, res) => {
+const getUsers = async (req, res) => {
     const params = req.params;
-    if (params.id) {
-        userRepository.getUser(params.id).then(user => {
+    try {
+        if (params.id) {
+            const user = await userRepository.getUser(params.id);
             if (!user) {
-                const response = createResponse('Error', httpStatus.BadRequest, 'User not found');
-                res.status(httpStatus.BadRequest).json(response);
+                throw new Error('User not found')
             }
             const response = createResponse('User by id', httpStatus.OK, user);
             res.status(httpStatus.OK).json(response);
-        }).catch(err => {
-            const response = createResponse('Error', httpStatus.BadRequest, err.message);
-            res.status(httpStatus.BadRequest).json(response);
-        })
-    }else {
-        userRepository.getUser().then(users => {
+        }else {
+            const users = await userRepository.getUser();
             const response = createResponse('List all users', httpStatus.OK, users);
             res.status(httpStatus.OK).json(response);
-        }).catch(err => {
-            const response = createResponse('Error', httpStatus.BadRequest, err.message);
-            res.status(httpStatus.BadRequest).json(response);
-        })
+        }
+    } catch (error) {
+        if (error.message == 'User not found') {
+            const response = createResponse(error.message, httpStatus.NotFound, {error: error.message});
+            res.status(httpStatus.NotFound).json(response);
+        }
+
+        const response = createResponse('Error', httpStatus.BadRequest, {error: error.message});
+        res.status(httpStatus.BadRequest).json(response);
     }
+    
 }
 
 const updateUser = async (req, res) => {
@@ -115,30 +124,44 @@ const updateUser = async (req, res) => {
                 res.status(httpStatus.Unauthorized).json(response);
                 break;
             case 'User not found':
-                response = createResponse('Error', httpStatus.NotFound, error.message);
+                response = createResponse('Error', httpStatus.NotFound, {error: error.message});
                 res.status(httpStatus.NotFound).json(response);
             default:
+                response = createResponse('Error', httpStatus.BadRequest, {error: error.message});
+                res.status(httpStatus.BadRequest).json(response);
                 break;
         }
 
     }
 }
 
-const deleteUser = (req, res) => {
+const deleteUser = async (req, res) => {
     const body = req.body;
     const params = req.params;
-    userRepository.deleteUser(params.id).then(user => {
+    try {
+        const user = await userRepository.deleteUser(params.id);
         if (!user) {
-            const response = createResponse('Error', httpStatus.BadRequest, 'User not found');
-            res.status(httpStatus.BadRequest).json(response);
+            throw new Error('User not found');
         }
         const response = createResponse('Success to delete user', httpStatus.OK, user);
         res.status(httpStatus.OK).json(response);
-    }).catch(err => {
-        const response = createResponse('Error', httpStatus.BadRequest, err.message);
-        res.status(httpStatus.BadRequest).json(response);
+
+    } catch (error) {
+        let response;
+        switch (error.message) {
+            case 'Unauthorized':
+                response = unauthorizedResponse();
+                res.status(httpStatus.Unauthorized).json(response);
+                break;
+            case 'User not found':
+                response = createResponse('Error', httpStatus.NotFound, {error: error.message});
+                res.status(httpStatus.NotFound).json(response);
+            default:
+                response = createResponse('Error', httpStatus.BadRequest, {error: error.message});
+                res.status(httpStatus.BadRequest).json(response);
+                break;
+        }
     }
-    );
 }
 
 const getUserActivities = async (req, res) => {
