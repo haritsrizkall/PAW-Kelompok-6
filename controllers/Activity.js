@@ -1,3 +1,4 @@
+const moment = require('moment');
 const activityRepository = require('../database/repository/Activity');
 const { createResponse, unauthorizedResponse } = require('../utils/helpers');
 const httpStatus = require('../utils/httpStatus');
@@ -7,8 +8,9 @@ const addActivity = async (req, res) => {
 
     try {
         const activity = await activityRepository.saveActivity({
+            ...body,
             userId: req.userId,
-            ...body
+            deadline: moment(body.deadline).format('YYYY-MM-DD HH:mm:ss')
         });
         const response = createResponse('Success to add activity', httpStatus.OK, activity);
         res.status(httpStatus.OK).json(response);

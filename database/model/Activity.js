@@ -19,7 +19,7 @@ const activitySchema = new mongoose.Schema({
         default: false
     },
     deadline: {
-        type: Date,
+        type: String,
         required: true
     }
 }, {collection: 'activities', timestamps: true});
