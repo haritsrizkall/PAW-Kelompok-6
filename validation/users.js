@@ -1,16 +1,17 @@
 const joi = require("joi");
 
-const registerValidation = {
-    body: joi.object.keys({
+const registerValidation = joi.object({
         name: joi.string().required(),
-        email: joi.string().required().email(),
+        email: joi.string().required().email().exist(),
         password: joi.string().required().min(6),
     })
-}
 
-const loginValidation = {
-    body: joi.object().keys({
+const loginValidation = joi.object({
         email: joi.string().required().email(),
         password: joi.string().required().min(6),
     })
+
+module.exports = {
+    registerValidation,
+    loginValidation
 }
