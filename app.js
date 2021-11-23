@@ -19,8 +19,6 @@ app.get('/', (req, res) => {
     res.send(`Please ${config.database.uri}`);
 });
 
-app.listen(PORT, app => {
-    console.log('App run....')
-});
+app.listen(process.env.PORT || 5000);    
 
 module.exports = app;
