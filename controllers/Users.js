@@ -4,7 +4,12 @@ const httpStatus = require('../utils/httpStatus');
 const jwt = require('jsonwebtoken');
 const config = require('../config')
 const bcrypt = require('bcrypt');
+const AWS = require('aws-sdk');
 const { registerValidation, loginValidation } = require('../validation/users');
+const s3 = new AWS.S3({
+    accessKeyId: config.aws.accessKeyId,
+    secretAccessKey: config.aws.secretAccessKey,
+})
 
 const registerUser = async (req, res) => {
 
@@ -185,11 +190,45 @@ const getUserActivities = async (req, res) => {
     }
 }
 
+const uploadAvatar = async (req, res) => {
+    const params = req.params;
+    if (params.id !== req.userId) {
+        const response = unauthorizedResponse();
+        res.status(httpStatus.Unauthorized).json(response);    
+    }
+
+    s3.upload({
+        Bucket: config.aws.bucketName,
+        Key: `${req.userId}`,
+        Body: req.file.buffer,
+        ACL: 'public-read'
+    }, async (err, data) => {
+        if (err) {
+            res.status(500).json({
+                message: 'error',
+            })
+        }
+        try {
+            const user = await userRepository.updateUser(params.id, {
+                avatar: data.Location
+            });
+        } catch (error) {
+            response = createResponse('Error', httpStatus.BadRequest, {error: error.message});
+            res.status(httpStatus.BadRequest).json(response);
+        }
+        res.status(200).json({
+            message: 'success',
+            data: data
+        })
+    })
+}
+
 module.exports = {
     registerUser,
     getUsers,
     updateUser,
     deleteUser,
     loginUser,
-    getUserActivities
+    getUserActivities,
+    uploadAvatar
 }

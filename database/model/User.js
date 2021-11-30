@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: Role.User
+    },
+    avatar: {
+        type: String,
+        required: false
     }
 }, {collection: 'users'});
 
