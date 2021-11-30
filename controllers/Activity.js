@@ -10,6 +10,7 @@ const addActivity = async (req, res) => {
         const activity = await activityRepository.saveActivity({
             ...body,
             userId: req.userId,
+            status: body.status,
             deadline: moment(body.deadline).format('YYYY-MM-DD HH:mm:ss')
         });
         const response = createResponse('Success to add activity', httpStatus.OK, activity);

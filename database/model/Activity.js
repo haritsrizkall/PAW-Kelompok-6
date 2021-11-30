@@ -14,9 +14,9 @@ const activitySchema = new mongoose.Schema({
         required: true
     },
     status: {
-        type: Boolean,
+        type: Number,
         required: true,
-        default: false
+        default: 1
     },
     deadline: {
         type: String,
