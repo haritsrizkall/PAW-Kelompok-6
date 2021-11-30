@@ -6,6 +6,7 @@ const config = require('../config')
 const bcrypt = require('bcrypt');
 const AWS = require('aws-sdk');
 const { registerValidation, loginValidation } = require('../validation/users');
+const moment = require('moment');
 const s3 = new AWS.S3({
     accessKeyId: config.aws.accessKeyId,
     secretAccessKey: config.aws.secretAccessKey,
@@ -199,7 +200,7 @@ const uploadAvatar = async (req, res) => {
 
     s3.upload({
         Bucket: config.aws.bucketName,
-        Key: `${req.userId}`,
+        Key: `${req.userId}${moment().format('YYYYMMDDHHmmss')}`,
         Body: req.file.buffer,
         ACL: 'public-read'
     }, async (err, data) => {
