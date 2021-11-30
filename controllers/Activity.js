@@ -62,9 +62,9 @@ const updateActivity = async (req, res) => {
             throw new Error('Unauthorized');
         }
 
-        await activityRepository.updateActivity(params.id, body);
+        const updatedActivity = await activityRepository.updateActivity(params.id, body);
 
-        const response = createResponse('Success to update activity', httpStatus.OK, activity);
+        const response = createResponse('Success to update activity', httpStatus.OK, updatedActivity);
         res.status(httpStatus.OK).json(response);
     } catch (error) {
         let response;
