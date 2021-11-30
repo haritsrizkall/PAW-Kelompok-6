@@ -58,11 +58,11 @@ const updateActivity = async (req, res) => {
             throw new Error('Activity not found');
         }
 
-        await activityRepository.updateActivity(params.id, body);
-
-        if(activity.id != req.userId) {
+        if(activity.userId != req.userId) {
             throw new Error('Unauthorized');
         }
+
+        await activityRepository.updateActivity(params.id, body);
 
         const response = createResponse('Success to update activity', httpStatus.OK, activity);
         res.status(httpStatus.OK).json(response);
