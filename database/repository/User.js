@@ -14,7 +14,7 @@ const getUser = async (id) => {
 }
 
 const getUserActivities = async (userId) => {
-    return await activityModel.find({ userId });
+    return await activityModel.find({ userId }).sort('deadline');
 }
 
 const getUserByEmail = async (email) => {
